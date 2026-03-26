@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 280px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Mono", "Consolas", monospace;
+        background: #1a1a1a;
+        color: #e0e0e0;
+        font-size: 12px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .header-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .header-action {
+        background: none;
+        border: none;
+        color: #555;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+      .header-action:hover {
+        color: #888;
+        background: #2a2a2a;
+      }
+      .status-bar {
+        padding: 12px 14px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #333;
+        flex-shrink: 0;
+      }
+      .status-dot.active {
+        background: #4ade80;
+        box-shadow: 0 0 6px #4ade8066;
+      }
+      .status-dot.paused {
+        background: #f59e0b;
+      }
+      .status-text {
+        font-size: 11px;
+        color: #888;
+        flex: 1;
+      }
+      .status-domain {
+        font-size: 11px;
+        color: #555;
+        margin-top: 6px;
+        font-family: monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .actions {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .btn {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #2a2a2a;
+        background: #1a1a1a;
+        color: #c0c0c0;
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left;
+        border-radius: 3px;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .btn:hover {
+        background: #222;
+        border-color: #3a3a3a;
+        color: #e0e0e0;
+      }
+      .btn:active {
+        background: #2a2a2a;
+      }
+      .btn-primary {
+        border-color: #3a3a3a;
+      }
+      .btn-primary:hover {
+        background: #2a2a2a;
+      }
+      .btn-blocked {
+        border-color: #3d2a2a;
+        color: #a06060;
+      }
+      .btn-blocked:hover {
+        background: #2a1a1a;
+        border-color: #5a3a3a;
+      }
+      .btn-label {
+        font-size: 11px;
+      }
+      .btn-shortcut {
+        font-size: 10px;
+        color: #444;
+        font-family: monospace;
+      }
+      .footer {
+        padding: 10px 14px;
+        border-top: 1px solid #2a2a2a;
+      }
+      .footer-link {
+        color: #444;
+        text-decoration: none;
+        font-size: 10px;
+        text-align: center;
+        display: block;
+      }
+      .footer-link:hover {
+        color: #666;
+      }
+      .toggle-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .toggle-label {
+        font-size: 11px;
+        color: #888;
+      }
+      .toggle {
+        position: relative;
+        width: 32px;
+        height: 18px;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #2a2a2a;
+        border-radius: 2px;
+        transition: 0.2s;
+      }
+      .toggle-slider:before {
+        content: "";
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        left: 3px;
+        top: 3px;
+        background: #555;
+        border-radius: 2px;
+        transition: 0.2s;
+      }
+      .toggle input:checked + .toggle-slider {
+        background: #2a3a2a;
+      }
+      .toggle input:checked + .toggle-slider:before {
+        transform: translateX(14px);
+        background: #4ade80;
+      }
+      .blocked-badge {
+        font-size: 9px;
+        background: #5a3a3a;
+        color: #a06060;
+        padding: 2px 5px;
+        border-radius: 2px;
+        font-family: monospace;
+      }
+      .hint {
+        font-size: 10px;
+        color: #444;
+        padding: 0 14px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <span class="header-title">Web Summarizer</span>
+      <button class="header-action" id="settingsBtn" title="设置">⚙</button>
+    </div>
+
+    <div class="toggle-section">
+      <span class="toggle-label">自动总结</span>
+      <label class="toggle">
+        <input type="checkbox" id="enabledToggle" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-row">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">检测中...</span>
+      </div>
+      <div class="status-domain" id="domainText"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="summarizeBtn">
+        <span class="btn-label">总结当前页面</span>
+        <span class="btn-shortcut">⌘S</span>
+      </button>
+      <button class="btn btn-blocked" id="blockBtn">
+        <span class="btn-label" id="blockBtnLabel">屏蔽此网站</span>
+        <span class="btn-shortcut" id="blockBtnIcon">+</span>
+      </button>
+    </div>
+
+    <p class="hint">点击扩展图标 → 打开设置</p>
+
+    <div class="footer">
+      <a href="../options/options.html" target="_blank" class="footer-link"
+        >打开完整设置</a
+      >
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
