@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Summarizer</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "Consolas", monospace; background: #111; color: #c0c0c0; font-size: 12px; line-height: 1.5; }
+      .layout { display: flex; min-height: 100vh; }
+      .sidebar { width: 180px; border-right: 1px solid #1e1e1e; padding: 24px 0; flex-shrink: 0; }
+      .sidebar-title { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #444; padding: 0 20px; margin-bottom: 16px; }
+      .nav-item { display: block; padding: 8px 20px; color: #666; text-decoration: none; font-size: 12px; cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; }
+      .nav-item:hover { color: #999; }
+      .nav-item.active { color: #e0e0e0; border-left-color: #4ade80; background: #161616; }
+      .main { flex: 1; padding: 32px 40px; max-width: 720px; }
+      .page-title { font-size: 16px; font-weight: 600; color: #e0e0e0; margin-bottom: 32px; letter-spacing: -0.3px; }
+      .section { margin-bottom: 36px; }
+      .section-title { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: #555; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #1e1e1e; }
+      .field { margin-bottom: 16px; }
+      .field-label { display: block; font-size: 11px; color: #666; margin-bottom: 6px; font-family: monospace; }
+      .field-hint { font-size: 10px; color: #444; margin-top: 4px; }
+      input[type="text"], input[type="password"], textarea { width: 100%; padding: 8px 10px; background: #0d0d0d; border: 1px solid #222; border-radius: 3px; color: #c0c0c0; font-size: 12px; font-family: inherit; transition: border-color 0.15s; }
+      input:focus, textarea:focus { outline: none; border-color: #333; }
+      textarea { resize: vertical; min-height: 80px; }
+      .btn-row { display: flex; gap: 8px; margin-top: 24px; }
+      .btn { padding: 8px 16px; border: 1px solid #2a2a2a; background: #161616; color: #999; font-size: 11px; font-family: inherit; cursor: pointer; border-radius: 3px; transition: all 0.15s; }
+      .btn:hover { background: #1e1e1e; color: #c0c0c0; border-color: #3a3a3a; }
+      .btn:active { background: #222; }
+      .btn-primary { background: #1a2a1a; border-color: #2a3a2a; color: #6ee7a0; }
+      .btn-primary:hover { background: #1f351f; border-color: #3a5a3a; }
+      .btn-danger { border-color: #3a2a2a; color: #a06060; }
+      .btn-danger:hover { background: #2a1a1a; border-color: #5a3a3a; }
+      .msg { margin-top: 12px; padding: 8px 12px; font-size: 11px; border-radius: 3px; display: none; }
+      .msg.show { display: block; }
+      .msg.success { background: #1a2a1a; color: #6ee7a0; border: 1px solid #2a3a2a; }
+      .msg.error { background: #2a1a1a; color: #e07070; border: 1px solid #3a2a2a; }
+      .blocklist-textarea { min-height: 120px; font-size: 11px; }
+      .blocklist-hint { font-size: 10px; color: #444; margin-top: 6px; }
+      .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
+      .toggle-info { flex: 1; }
+      .toggle-name { font-size: 12px; color: #c0c0c0; }
+      .toggle-desc { font-size: 10px; color: #555; margin-top: 2px; }
+      .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+      .toggle input { opacity: 0; width: 0; height: 0; }
+      .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #1e1e1e; border-radius: 2px; transition: 0.2s; }
+      .toggle-slider:before { content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #444; border-radius: 2px; transition: 0.2s; }
+      .toggle input:checked + .toggle-slider { background: #1a2a1a; }
+      .toggle input:checked + .toggle-slider:before { transform: translateX(16px); background: #4ade80; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="sidebar">
+        <div class="sidebar-title">Web Summarizer</div>
+        <div class="nav-item active" data-tab="general">通用设置</div>
+        <div class="nav-item" data-tab="domains">域名管理</div>
+        <div class="nav-item" data-tab="backup">备份</div>
+        <div class="nav-item" data-tab="about">关于</div>
+      </nav>
+      <main class="main">
+        <div id="tab-general" class="tab-content">
+          <h2 class="page-title">通用设置</h2>
+          <div class="section">
+            <div class="section-title">AI API 配置</div>
+            <div class="field">
+              <label class="field-label">BASE URL</label>
+              <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1/chat/completions" />
+              <p class="field-hint">支持 OpenAI 兼容格式的 API 地址</p>
+            </div>
+            <div class="field">
+              <label class="field-label">MODEL</label>
+              <input type="text" id="model" placeholder="gpt-3.5-turbo / gpt-4 / claude-3-sonnet" />
+            </div>
+            <div class="field">
+              <label class="field-label">API KEY</label>
+              <input type="password" id="apiKey" placeholder="sk-..." />
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">总结提示词</div>
+            <p style="font-size: 11px; color: #555; margin-bottom: 12px">自定义 AI 总结网页内容时使用的系统提示词。</p>
+            <div class="field">
+              <label class="field-label">SYSTEM PROMPT</label>
+              <textarea id="customPrompt" placeholder="你是一个网页内容总结助手..." ></textarea>
+              <p class="field-hint">留空则使用默认提示词</p>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">功能开关</div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">自动页面总结</div>
+                <div class="toggle-desc">打开新页面时自动生成摘要</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="enabledToggle" /><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">智能触发</div>
+                <div class="toggle-desc">仅在文章类页面触发（过滤视频/搜索/社交）</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="smartTriggerToggle" checked /><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="saveBtn">保存设置</button>
+            <button class="btn" id="testBtn">测试连接</button>
+          </div>
+          <div id="saveMsg" class="msg"></div>
+        </div>
+        <div id="tab-domains" class="tab-content" style="display: none">
+          <h2 class="page-title">域名管理</h2>
+          <div class="section">
+            <div class="section-title">黑名单</div>
+            <p style="font-size: 11px; color: #555; margin-bottom: 12px">在以下框中添加要屏蔽的网站，每行一个域名。</p>
+            <div class="field">
+              <textarea id="blockedSitesTextarea" class="blocklist-textarea" placeholder="example.com&#10;subdomain.another-site.org"></textarea>
+            </div>
+            <p class="blocklist-hint">每行一个域名</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="saveBlocklistBtn">保存黑名单</button>
+            </div>
+            <div id="blocklistMsg" class="msg"></div>
+          </div>
+          <div class="section">
+            <div class="section-title">白名单</div>
+            <p style="font-size: 11px; color: #555; margin-bottom: 12px">手动触发过的页面会自动加入白名单。</p>
+            <div class="field">
+              <textarea id="whitelistTextarea" class="blocklist-textarea" placeholder="example.com" readonly></textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-danger" id="clearWhitelistBtn">清空白名单</button>
+            </div>
+            <div id="whitelistMsg" class="msg"></div>
+          </div>
+        </div>
+        <div id="tab-backup" class="tab-content" style="display: none">
+          <h2 class="page-title">备份与恢复</h2>
+          <div class="section">
+            <div class="section-title">导出设置</div>
+            <p style="font-size: 11px; color: #555; margin-bottom: 12px">导出所有设置为 JSON 文件。</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="exportBtn">导出设置</button>
+            </div>
+            <div id="exportMsg" class="msg"></div>
+          </div>
+          <div class="section">
+            <div class="section-title">导入设置</div>
+            <p style="font-size: 11px; color: #555; margin-bottom: 12px">从 JSON 文件恢复设置。</p>
+            <input type="file" id="importFile" accept=".json" style="display: none" />
+            <div class="btn-row">
+              <button class="btn btn-danger" id="importBtn">选择文件导入</button>
+            </div>
+            <div id="backupMsg" class="msg"></div>
+          </div>
+        </div>
+        <div id="tab-about" class="tab-content" style="display: none">
+          <h2 class="page-title">关于</h2>
+          <div class="section">
+            <div class="section-title">Web Summarizer</div>
+            <p style="font-size: 11px; color: #555; line-height: 1.8">
+              Version 1.0.0<br />
+              AI 驱动的 Chrome 浏览器扩展，自动识别网页内容并生成流式摘要。<br /><br />
+              支持 OpenAI、Claude、Gemini 等兼容 API。
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
